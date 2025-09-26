@@ -29,6 +29,11 @@ namespace Calculator
         bool divFlag = false;
         int usememory = 0;
         double usememorydouble = 0;
+        private int gameCodeIndex = 0;
+        private const string gameCode = "153349+-";
+        private TetrisGame tetris = new TetrisGame();
+        private bool tetrisMode = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -36,6 +41,27 @@ namespace Calculator
             subDisplay.Content = memory;
             this.KeyDown += Window_KeyDown;
 
+        }
+
+        private void CheckGameCode(char inputChar)
+        {
+            if (inputChar == gameCode[gameCodeIndex])
+            {
+                gameCodeIndex++;
+                //MessageBox.Show($"現在のコード進行: {gameCode.Substring(0, gameCodeIndex)}");
+                if (gameCodeIndex == gameCode.Length)
+                {
+                    disp = "";
+                    tetris.StartTetris(this);
+                    tetrisMode = true;
+                    gameCodeIndex = 0;
+                }
+            }
+            else
+            {
+                // 失敗したら最初から
+                gameCodeIndex = 0;
+            }
         }
 
         private void ResetAllButtonColors()
@@ -163,6 +189,7 @@ namespace Calculator
 
         private void one_Click(object sender, RoutedEventArgs e)
         {
+            CheckGameCode('1');
             if (disp.Length >= 8)
             {
                 disp = "ERROR";
@@ -200,6 +227,7 @@ namespace Calculator
 
         private void three_Click(object sender, RoutedEventArgs e)
         {
+            CheckGameCode('3');
             if (disp.Length >= 8)
             {
                 disp = "ERROR";
@@ -219,6 +247,7 @@ namespace Calculator
 
         private void four_Click(object sender, RoutedEventArgs e)
         {
+            CheckGameCode('4');
             if (disp.Length >= 8)
             {
                 disp = "ERROR";
@@ -238,6 +267,7 @@ namespace Calculator
 
         private void five_Click(object sender, RoutedEventArgs e)
         {
+            CheckGameCode('5');
             if (disp.Length >= 8)
             {
                 disp = "ERROR";
@@ -314,6 +344,14 @@ namespace Calculator
 
         private void nine_Click(object sender, RoutedEventArgs e)
         {
+            if (tetrisMode)
+            {
+                tetris.MoveMino("x"); // テトリスモード時は回転
+                return;
+            }
+
+            CheckGameCode('9');
+
             if (disp.Length >= 8)
             {
                 disp = "ERROR";
@@ -372,6 +410,12 @@ namespace Calculator
         }
         private void Calc()
         {
+            if (tetrisMode)
+            {
+                disp = "0";
+                return;
+            }
+
             if (disp == "ERROR") { return; }
             else if (b == true)
             {
@@ -428,6 +472,14 @@ namespace Calculator
         //＋
         private void plus_Click(object sender, RoutedEventArgs e)
         {
+            if (tetrisMode)
+            {
+                tetris.MoveMino("+");
+                return;
+            }
+
+            CheckGameCode('+');
+
             divFlag = false;
             if (rems == false)
             {
@@ -472,6 +524,15 @@ namespace Calculator
         //-
         private void minus_Click(object sender, RoutedEventArgs e)
         {
+            if (tetrisMode)
+            {
+
+                tetris.MoveMino("-");
+                return;
+            }
+
+            CheckGameCode('-');
+
             divFlag = false;
             if (rems == false)
             {
@@ -603,6 +664,12 @@ namespace Calculator
         }
         private void equal_Click(object sender, RoutedEventArgs e)
         {
+            if (tetrisMode)
+            {
+                tetris.MoveMino("d"); // テトリスモード時は下に動かす
+                return;
+            }
+
             if (disp == "ERROR") { return; }
             else if (op != "" && b == true && disp != "0" && disp != "-")
             {
@@ -652,6 +719,21 @@ namespace Calculator
 
         private void all_clear_Click(object sender, RoutedEventArgs e)
         {
+            if (tetrisMode)
+            {
+                // MainWindowを再読み込み
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    // 現在のMainWindowを閉じる
+                    var current = Application.Current.MainWindow;
+                    var newWindow = new MainWindow();
+                    Application.Current.MainWindow = newWindow;
+                    newWindow.Show();
+                    current.Close();
+                });
+                return;
+            }
+
             disp = "0";
             lblDisplay.Content = disp;
             memory = 0;
@@ -665,6 +747,7 @@ namespace Calculator
             ResetAllButtonColors();
             rems = true;
             divFlag = false;
+            gameCodeIndex = 0;
         }
 
         private void back_space_Click(object sender, RoutedEventArgs e)
@@ -681,6 +764,7 @@ namespace Calculator
             }
             else { return; }
             ResetAllButtonColors();
+            gameCodeIndex = 0;
         }
 
         private void only_Click(object sender, RoutedEventArgs e)
